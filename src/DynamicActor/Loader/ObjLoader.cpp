@@ -91,7 +91,7 @@ Buffer<u8> loadFile(const char* file_path, sead::Heap* heap) {
 
 namespace dynamicactor::loader {
 
-bool ObjLoader::loadMesh(const char* objFilename, al::DynamicDrawActor* dynamicDrawActor, al::DynamicCollisionActor* dynamicCollisionActor, uint16_t dynamicCollisionAttributeIndex) {
+bool ObjLoader::loadMesh(const char* objFilename, al::DynamicDrawActor* dynamicDrawActor, al::DynamicCollisionActor* dynamicCollisionActor, int dynamicCollisionAttributeIndex) {
     if (!dynamicDrawActor) {
         return false;
     }
@@ -151,8 +151,10 @@ bool ObjLoader::loadMesh(const char* objFilename, al::DynamicDrawActor* dynamicD
     size_t normalIndex = 0;
     size_t texCoordIndex = 0;
     dynamicDrawActor->begin();
-    // dynamicCollisionActor->begin();
-    // dynamicCollisionActor->attribute(dynamicCollisionAttributeIndex);
+    if (dynamicCollisionAttributeIndex != -1) {
+        dynamicCollisionActor->begin();
+        dynamicCollisionActor->attribute(dynamicCollisionAttributeIndex);
+    }
     while (std::getline(inStream, line))
     {
         auto skipToNextValue = [&line]() {
@@ -220,12 +222,16 @@ bool ObjLoader::loadMesh(const char* objFilename, al::DynamicDrawActor* dynamicD
                 dynamicDrawActor->texCoord(sead::Vector2f(tx.x, 1.f-tx.y), 1);
                 dynamicDrawActor->vertex(transform(VERTEX_BUFFER.buffer[vertexIndex]));
 
-                // dynamicCollisionActor->vertex(transform(VERTEX_BUFFER.buffer[vertexIndex]));
+                if (dynamicCollisionAttributeIndex != -1) {
+                    dynamicCollisionActor->vertex(transform(VERTEX_BUFFER.buffer[vertexIndex]));
+                }
             }
         }
     }
     dynamicDrawActor->end();
-    // dynamicCollisionActor->end();
+    if (dynamicCollisionAttributeIndex != -1) {
+        dynamicCollisionActor->end();
+    }
 
     Logger::log("Finished second pass to parse mesh\n");
 

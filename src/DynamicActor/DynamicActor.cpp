@@ -16,6 +16,7 @@
 #include <al/Library/LiveActor/ActorPoseKeeper.h>
 #include <al/Library/LiveActor/ActorMovementFunction.h>
 #include <al/Library/LiveActor/ActorSensorFunction.h>
+#include <al/Library/Math/MathUtil.h>
 #include <rs/util.hpp>
 
 #include <al/Library/LiveActor/ActorFactory.h>
@@ -33,6 +34,8 @@ namespace al {
     bool isExistCollisionParts(const al::LiveActor *);
 
     void invalidateHitSensors(al::LiveActor *);
+
+    void syncCollisionMtx(al::LiveActor*, sead::Matrix34f const*);
 
 }
 
@@ -82,13 +85,13 @@ void DynamicActor::init(al::ActorInitInfo const &initInfo) {
 
     mTextureContainer = new PBRTextureContainer();
 
-    // sead::Matrix34f mat;
-    // mat.makeIdentity();
-    // mDynamicCollisionActor = rs::createDynamicCollisionActor(initInfo, mTriBufferCapacity, &mat, al::getHitSensor(this, "Collision"/*from PuppetActor*/));
+    al::makeMtxRT(&mCollisionMatrix, this);
+    al::addHitSensorCollisionParts(this, initInfo, "Collision" , 0.0, 8, sead::Vector3f(0,0,0));
+    mDynamicCollisionActor = rs::createDynamicCollisionActor(initInfo, mTriBufferCapacity, &mCollisionMatrix, al::getHitSensor(this, "Collision"));
     // mDynamicCollisionAttributeIndex = rs::searchDynamicCollisionAttributeIndex("溶岩"/* Luncheon Bird Boss Lava */);
-    // mDynamicCollisionActor->begin();
-    // mDynamicCollisionActor->attribute(mDynamicCollisionAttributeIndex);
-    // mDynamicCollisionActor->end();
+    mDynamicCollisionActor->begin();
+    mDynamicCollisionActor->attribute(mDynamicCollisionAttributeIndex);
+    mDynamicCollisionActor->end();
 
     makeActorAlive();
 }
@@ -194,6 +197,9 @@ void DynamicActor::control() {
 
     moveActor(this, mClosingSpeedMainActor);
     moveActor(mDynamicDrawActor, mClosingSpeedDrawActor);
+
+    al::makeMtxRT(&mCollisionMatrix, this);
+    al::syncCollisionMtx(mDynamicCollisionActor, &mCollisionMatrix);
 }
 
 void DynamicActor::makeActorAlive() {
@@ -254,12 +260,22 @@ void DynamicActor::clearMesh()  {
     mDynamicDrawActor->end();
 }
 
+void DynamicActor::clearCollision()  {
+    if (!mDynamicCollisionActor) {
+        return;
+    }
+
+    mDynamicCollisionActor->begin();
+    mDynamicCollisionActor->end();
+}
+
 void DynamicActor::reset()  {
     if (!mDynamicDrawActor) {
         return;
     }
 
     clearMesh();
+    clearCollision();
     // set default blank textures (not strictly necessary, just for cleanup)
     loadPBRTextures(dynamicactor::loader::PBRTexturePath{
         .albedo = dynamicactor::loader::TexturePath{"ObjectData/DynamicActorDrawActorBase", "DynamicActorDrawActorBase", "Texture_alb"},

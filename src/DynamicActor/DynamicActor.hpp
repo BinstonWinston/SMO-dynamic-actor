@@ -55,7 +55,12 @@ public:
     bool loadMesh(const char* objFilename);
     void loadPBRTextures(dynamicactor::loader::PBRTexturePath const& pbrTexturePath);
     void clearMesh();
+    void clearCollision();
     void reset();
+
+    void setCollisionAttributeIndex(int collisionAttributeIndex) { // Changes only take effect when loadMesh is called again
+        mDynamicCollisionAttributeIndex = collisionAttributeIndex;
+    }
 
     void setTransform(const sead::Vector3f& newPos, const sead::Quatf& newRot);
 
@@ -76,7 +81,8 @@ private:
     PBRTextureContainer* mTextureContainer = nullptr;
 
     al::DynamicCollisionActor* mDynamicCollisionActor = nullptr;
-    uint16_t mDynamicCollisionAttributeIndex = 0;
+    int mDynamicCollisionAttributeIndex = -1;
+    sead::Matrix34f mCollisionMatrix;
 };
 
 }

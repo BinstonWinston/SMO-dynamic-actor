@@ -72,6 +72,7 @@ static dynamicactor::DynamicActor* actors[MAX_ACTOR_COUNT] = {nullptr};
 static int dynamicActorCount = 0;
 static const char* currentMeshes[MAX_ACTOR_COUNT] = {nullptr};
 static int currentTexs[MAX_ACTOR_COUNT] = {-1};
+static int currentCollisionAttributeIndices[MAX_ACTOR_COUNT] = {-1};
 static bool updatePoss[MAX_ACTOR_COUNT] = {false};
 
 void initActors(al::Scene *scene, al::ActorInitInfo const &rootInfo, char const *listName) {
@@ -232,6 +233,30 @@ void imguiActorEditor(HakoniwaSequence *gameSeq, dynamicactor::DynamicActor* dyn
 
         if (prevTex != currentTex && currentTex != -1 && dynamicActor) {
             dynamicActor->loadPBRTextures(textures[currentTex]);
+        }
+    }
+
+    {
+        ImGui::Text("CollisionAttributeIndex");
+        ImGui::SameLine();
+        int& currentCollisionAttributeIndex = currentCollisionAttributeIndices[actorIndex];
+        const int prevCollisionAttributeIndex = currentCollisionAttributeIndex;
+        if (ImGui::BeginCombo("##collisonCombo", (currentCollisionAttributeIndex != -1) ? std::to_string(currentCollisionAttributeIndex).c_str() : "None")) {
+            for (int i = -1; i < 5 /* num of collisions defined in DynamicCollisionAttribute.szs */; i++) {
+                bool isSelected = (currentCollisionAttributeIndex == i);
+                if (ImGui::Selectable(std::to_string(i).c_str(), isSelected)) {
+                    currentCollisionAttributeIndex = i;
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        if (prevCollisionAttributeIndex != currentCollisionAttributeIndex && dynamicActor) {
+            dynamicActor->setCollisionAttributeIndex(currentCollisionAttributeIndex);
+            // dynamicActor->loadMesh(currentMeshes[actorIndex]); // Reload mesh to rebuild collision, this causes a crash, need to manually swap meshes to reload for now
         }
     }
 

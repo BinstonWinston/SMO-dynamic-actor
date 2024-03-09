@@ -38,8 +38,13 @@ Custom texture allocations were explored. Such as creating one texture at scene 
 
 This all uses a fixed PBR material. Swapping the material shader itself has not been figured out. It works well with some objects, it doesn't work well with others.
 
+#### Collisions
+`DynamicActor` initializes a subactor called `al::DynamicCollisionActor` at init with a given triangle capacity. Like DynamicDrawActor the triangle data can be modified at runtime, but instead of being displayed, it is used for collision. Currently, the `.obj` mesh data used for display is also used for collision, though this could be easily extended to load a separate collision mesh.
+
+Collision type is defined using an attribute index corresponding to an entry in `ObjectData/DynamicCollisionAttribute.szs`.
+
+
 ### Not Implemented
-* Collisions
 * Rigging / Skeletal meshes
 * A bunch of other stuff like sound effects and other keepers
 
